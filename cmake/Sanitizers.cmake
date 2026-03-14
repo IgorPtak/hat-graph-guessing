@@ -1,0 +1,16 @@
+function(add_sanitizers target)
+  if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    option(ENABLE_ASAN "Enable Address Sanitizer" OFF)
+    option(ENABLE_UB_SAN "Enable Undefined Behavior Sanitizer" OFF)
+
+    if(ENABLE_ASAN)
+      target_compile_options(${target} PRIVATE -fsanitize=address -fno-omit-frame-pointer)
+      target_link_options(${target} PRIVATE -fsanitize=address)
+    endif()
+
+    if(ENABLE_UB_SAN)
+      target_compile_options(${target} PRIVATE -fsanitize=undefined)
+      target_link_options(${target} PRIVATE -fsanitize=undefined)
+    endif()
+  endif()
+endfunction()
