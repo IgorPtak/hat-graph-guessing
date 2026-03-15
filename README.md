@@ -1,34 +1,22 @@
 # Hats Project
 
-Projekt realizuje problem "Muddy Children" oraz jego warianty, takie jak zgadywanie klru czapek na grafach ("Hat Guessing Games"). Projekt wymaga od agentów ewaluacji własnego otoczenia oraz rekurencyjnego symulowania stanów mentalnych pozostalych uczestników systemu.
+Niniejszy dokument stanowi kompleksowe studium teoretyczne mechanizmów dedukcyjnych zaimplementowanych w projekcie `hats`. Projekt ten bada ewolucję wiedzy w systemach wieloagentowych na grafach częściowej obserwacji, opierając się na Dynamicznej Logice Epistemicznej (DEL).
 
-Matematyczne podstawy do analizy tego typu problemów zostały zebrane w monografii Reasoning About Knowledge (Fagin, Halpern, Moses, Vardi). Autorzy pokazali, jak wykorzystać semantykę Krikego do modelowania stanów wiedzy agentó∑ oraz zdefiniowali pojędzi "wiedzy powszechnej" (Common Knowledge), która jest warunkiem koniecznym do koordynacji dzialan w systemie. Z kolei, to jak wiedza ewoluuje w czasie -- poprzez jawne deklaracje, a takze poprzez milczenie - opisuje Dynamiczna logika Epistemiczna (DEL), rozwijana m.in. przez van Ditmarscha, van der Hoeka, Kooia oraz Baltaga i Mossa. Pokazali oni, ze kazda interakcja infromacyjna stanowi operator, który zwęza przestrzeń mozliwych światów.
+---
 
-Wpływ samej struktury (topologii) grafu na przepływ takich informacji zbadali S. Butler i in. (2008) w kontekście gier z częściową obserwacją. Dodatkowo, rola milczenia jako asynchronicznego sposobu przekazywania informacji została sformalizowana w nowszych pracach, takich jak publikacja Gorena i Mosesa (2020).
+## 1. Architektura Stanów: Przestrzeń Możliwych Światów i Semantyka Kripkego
 
-## Sformalizowana przestrzeń stanów i model kripkego
+Podstawą symulacji jest modelowanie niepewności agentów za pomocą **struktur Kripkego**.
 
-Rozważmy system składający się z $N$ idealnie racjonalnych agentów, reprezentowanych jako zbiór wierzchołków $V = \{1, 2, \dots, N\}$ pewnego nieskierowanego grafu obserwacji $G = (V, E)$. Relacja symetryczna zadana przez zbiór krawędzi $E \subseteq V \times V$ determinuje architekturę informacji w systemie: krawędź $\{i, j\} \in E$ oznacza, że agent $i$ widzi agenta $j$, co w konsekwencji implikuje, że agent $j$ widzi agenta $i$. Definiujemy otwarte otoczenie wierzchołka $i$ w grafie $G$ jako zbiór $N(i) = \{j \in V \mid \{i, j\} \in E\}$. Zgodnie z konwencją problemów typu "Muddy Children" oraz "Hat Guessing", zakładamy brak pętli własnych w grafie, tj. dla każdego $i \in V$, $\{i, i\} \notin E$. Odzwierciedla to fundamentalne założenie o asymetrii informacyjnej: żaden agent nie może zaobserwować własnego stanu (własnego czoła lub własnej czapki).
+### 1.1. Definicja Świata ($\omega$)
 
-Każdy agent $i \in V$ charakteryzuje się wewnętrznym, binarnym stanem, reprezentowanym przez zmienną $\omega_i \in \{0, 1\}$. Stan $\omega_i = 1$ interpretujemy jako posiadanie "brudnego czoła" (lub "czerwonej czapki"), natomiast $\omega_i = 0$ oznacza czoło "czyste". Globalny stan całego systemu, określany mianem "świata rzeczywistego" (actual world), można zatem opisać jako wektor alokacji $\omega = (\omega_1, \omega_2, \dots, \omega_N)$. Przestrzeń wszystkich logicznie możliwych światów początkowych, oznaczana jako $\Omega$, stanowi iloczyn kartezjański przestrzeni stanów poszczególnych agentów, tj. $\Omega = \{0, 1\}^N$. Rozmiar tej hiperkostki wynosi dokładnie $|\Omega| = 2^N$.
+Globalny stan systemu (świat rzeczywisty) to wektor binarny $\omega = (\omega_1, \omega_2, \dots, \omega_N)$, gdzie $\omega_i \in \{0, 1\}$. Przestrzeń wszystkich logicznie dopuszczalnych światów $\Omega = \{0, 1\}^N$ tworzy hiperkostkę o rozmiarze $2^N$.
 
-Aby matematycznie opisać to, co wiedzą (i czego nie wiedzą) poszczególni gracze, opieramy się na klasycznej logice epistemicznej (rozwijanej m.in. przez J. Hintikkę oraz zespół R. Fagina). Podstawowym narzędziem są tutaj tzw. struktury Kripkego, które w naszym projekcie uprościliśmy do następującego modelu:
+### 1.2. Relacja Nierozróżnialności ($R_i$)
 
-1. Niech $\Omega$ oznacza zbiór wszystkich możliwych scenariuszy (stanów gry). W naszym przypadku pojedynczy "świat" $\omega \in \Omega$ to po prostu jeden konkretny przypadek przypisania kolorów czapek wszystkim graczom. Jeżeli mamy $N$ graczy i 2 kolory czapek (reprezentowane jako bity 0 i 1), to wszystkich możliwych światów jest $2^N$.
-
-2. Relacja $R_i$ łączy dwa światy ($\omega$ oraz $\omega'$), jeśli dla gracza $i$ wyglądają one dokładnie tak samo.W naszej grze ograniczenia wzroku narzuca graf $G$. Gracz $i$ widzi jedynie zbiór swoich sąsiadów, oznaczany jako $N(i)$. Zatem dwa różne światy (układy czapek) są dla niego nierozróżnialne wtedy i tylko wtedy, gdy wszyscy jego sąsiedzi mają w obu wariantach identyczne kolory czapek.Formalnie zapisujemy ten warunek następująco:$$(\omega, \omega') \in R_i \iff \forall j \in N(i), \; \omega_j = \omega'_j.$$
-
-Powyższy wzór to matematyczny fundament pierwszej fazy naszego algorytmu. Oznacza on, że w chwili startowej ($t=0$) gracz filtruje całą przestrzeń $\Omega$ ($2^N$ wariantów) i pozostawia na swojej prywatnej liście tylko te scenariusze, które są w 100% zgodne z barwami czapek obserwowanymi u sąsiadów. Wartości na pozostałych węzłach grafu (w tym na jego własnej głowie) pozostają dla niego niewiadomą, co zmusza go do rozważania wielu potencjalnych "światów" jednocześnie.
-
-Oznacza to, że z perspektywy gracza $i$, dwa scenariusze ($\omega$ oraz $\omega'$) są nie do odróżnienia, jeśli kolory czapek zgadzają się u wszystkich jego sąsiadów zdefiniowanych przez zbiór $N(i)$.
-
-Wynikają z tego trzy bardzo ważne, matematyczne i algorytmiczne właściwości naszego modelu:
-
-1.  Niewiedza o własnym stanie i odległych węzłach: Ponieważ gracz nie widzi samego siebie ($i \notin N(i)$), w rozważanych przez niego światach jego własny kolor $\omega_i$ może przyjmować dowolną wartość (0 lub 1). Dokładnie to samo dotyczy wszystkich graczy znajdujących się poza jego zasięgiem wzroku, czyli wierzchołków $k \notin N(i) \cup \{i\}$. W ten naturalny sposób modelujemy brak informacji o odległych częściach grafu.
-2.  Relacja równoważności i logika S5: Relacja $R_i$, oparta na identyczności widocznych stanów, jest z definicji zwrotna, symetryczna i przechodnia. Stanowi więc relację równoważności. Oznacza to, że dzieli ona całą przestrzeń wszystkich $2^N$ możliwych światów na rozłączne podzbiory, zwane klasami abstrakcji. Z perspektywy teorii systemów wieloagentowych implikuje to, że wnioskowanie agentów opisane jest klasyczną logiką modalną S5. W praktyce gwarantuje to pełną introspekcję: algorytm każdego gracza "wie, co wie" oraz "wie, czego nie wie".
-3.  Rozmiar przestrzeni poszukiwań: Z ilu wariantów składa się taka pojedyncza klasa abstrakcji (czyli ile światów bierze pod uwagę dany gracz)? Rozmiar ten wynosi dokładnie $2^{N - |N(i)|}$. Wynika to wprost z kombinatoryki: gracz nie widzi dokładnie $N - |N(i)|$ osób (włączając w to siebie), a każda z nich może posiadać jeden z dwóch kolorów czapek.
-
-Zbiór wszystkich tych wariantów, które gracz $i$ uważa za matematycznie możliwe, gdy w rzeczywistości gra toczy się w świecie $\omega$, oznaczamy formalnie jako $\mathcal{K}_i(\omega)$:$$\mathcal{K}_i(\omega) = \{ \omega' \in \Omega \mid (\omega, \omega') \in R_i \}$$To właśnie ten zbiór $\mathcal{K}_i(\omega)$ będzie punktem startowym ($t=0$) w głównej pętli symulacyjnej naszego programu, a każda kolejna tura będzie polegała na jego stopniowym pomniejszaniu.
+Topologia grafu $G=(V, E)$ definiuje relację równoważności $R_i$ dla każdego agenta $i$. Relacja ta łączy światy, które z perspektywy agenta $i$ są identyczne:
+$$(\omega, \omega') \in R_i \iff \forall j \in N(i), \omega_j = \omega'_j$$
+Relacja $R_i$ indukuje partycję (podział) zbioru $\Omega$ na rozłączne klasy abstrakcji $[\omega]_i$. Z perspektywy agenta $i$ znajdującego się w świecie $\omega$, zbiór światów możliwych to $\mathcal{K}_i(\omega) = \{ \omega' \in \Omega \mid (\omega, \omega') \in R_i \}$.
 
 | Komponent Modelu                          | Matematyczna Definicja                                    | Interpretacja Epistemiczna                                                 |
 | :---------------------------------------- | :-------------------------------------------------------- | :------------------------------------------------------------------------- |
@@ -36,6 +24,79 @@ Zbiór wszystkich tych wariantów, które gracz $i$ uważa za matematycznie moż
 | Zmienna $p_i$                             | $p_i \in \pi(\omega) \iff \omega_i = 1$                   | Fakt "Agent $i$ ma czerwoną czapkę/brudne czoło".                          |
 | Relacja $R_i$                             | $\forall j \in N(i), \omega_j = \omega'_j$                | Kryterium nierozróżnialności dwóch światów przez agenta $i$.               |
 | Stan Epistemiczny $\mathcal{K}_i(\omega)$ | $\{ \omega' \in \Omega \mid (\omega, \omega') \in R_i \}$ | Zbiór światów, które agent $i$ uważa za możliwe, będąc w świecie $\omega$. |
+
+---
+
+## 2. Dynamika Wiedzy: Rekurencyjna Redukcja Modelu
+
+Ewolucja wiedzy następuje poprzez operatory ogłoszeń publicznych (Public Announcement Logic).
+
+### 2.1. Inicjalizacja: Ogłoszenie $\phi_0$
+
+Początkowe ogłoszenie $\phi_0 = \bigvee_{j \in V} p_j$ ("Istnieje co najmniej jedna czerwona czapka") usuwa z modelu świat zerowy $\mathbf{0}$. Od tego momentu $\Omega_0 = \Omega \setminus \{\mathbf{0}\}$.
+
+**Ważne założenie:** Przyjmujemy, że rzeczywisty wektor stanu $\omega^*$ nie jest wektorem zerowym ($\omega^* \neq \mathbf{0}$). W przeciwnym razie początkowe ogłoszenie publiczne $\phi_0$ byłoby fałszywe, co w logice PAL prowadzi do załamania modelu (brak światów możliwych).
+
+### 2.2. Operator Milczenia (Silence)
+
+Niech $\sigma_t$ będzie formułą stwierdzającą, że w rundzie $t$ żaden agent nie zna swojego koloru:
+$$\sigma_t = \bigwedge_{j \in V} \neg (K_j p_j \lor K_j \neg p_j)$$
+Publiczna obserwacja faktu, że $\sigma_t$ jest prawdziwe, prowadzi do redukcji modelu:
+$$\Omega_{t+1} = \{ \omega \in \Omega_t \mid \Omega_t, \omega \models \sigma_t \}$$
+Agent $i$ aktualizuje swój zbiór światów możliwych: $\mathcal{K}_i(t+1) = \mathcal{K}_i(t) \cap \Omega_{t+1}$.
+
+---
+
+## 3. Analiza Topologii: Szkice Dowodów
+
+### 3.1. Graf Pełny ($K_N$): Dowód Indukcyjny
+
+**Twierdzenie:** W grafie pełnym, jeśli obiektywnie istnieje $k$ czerwonych czapek, to agenci z czerwonymi czapkami zgadną swój kolor dokładnie w rundzie $T=k-1$.
+
+**Szkic dowodu (Indukcja po $k$):**
+
+1.  **Baza ($k=1$):** Agent $i$ widzi same zera. $\mathcal{K}_i(0) = \{\omega^*, \mathbf{0}\}$. Po $\phi_0$ zostaje tylko $\omega^*$. Agent zgaduje w $t=0$.
+2.  **Krok indukcyjny:** Załóżmy, że dla $k$ czapek agenci zgadują w $k-1$. Przy $k+1$ czapkach, agent $i$ widzi $k$ czerwonych czapek. Gdyby sam miał białą, ktoś musiałby zgadnąć w $k-1$. Milczenie w $k-1$ eliminuje światy z $k$ czapkami. Zostaje tylko świat z $k+1$.
+
+### 3.2. Cykl ($C_N$): Lemat o Horyzoncie Epistemicznym
+
+**Twierdzenie:** Prędkość propagacji informacji o braku wiedzy w grafie jest ograniczona przez odległość geodezyjną $d(i, j)$.
+
+**Szkic dowodu:** Redukcja $\mathcal{K}_i$ zależy od wiedzy sąsiadów. Aby milczenie odległego agenta $z$ wpłynęło na $i$, musi dojść do sekwencyjnej redukcji klas abstrakcji wzdłuż ścieżki. Każdy krok redukcji wymaga jednej rundy milczenia ($\sigma$). Stąd $t=d(i, z)$.
+
+### 3.3. Gwiazda ($S_N$): Dowód Impasu (Deadlock)
+
+**Twierdzenie:** Jeśli centrum $c$ ma czapkę białą ($\omega_c=0$), a co najmniej dwa liście $l_1, l_2$ mają czapki czerwone, dedukcja liści zatrzymuje się w rundzie $t=1$.
+
+**Szkic dowodu:** Liść $l_1$ widzi tylko $c=0$. Milczenie centrum w $t=0$ nie pozwala mu odróżnić świata, w którym on sam ma 1, od świata, w którym ma 0 (bo w obu światach centrum widzi czerwoną czapkę – albo u $l_1$, albo u $l_2$). Klasa abstrakcji liścia nie ulega redukcji.
+
+---
+
+## 4. Wyzwania Obliczeniowe: PSPACE-Zupełność i Optymalizacje
+
+Problem sprawdzania wiedzy na grafach jest fundamentalnie trudny (Succinct Model Checking).
+
+### 4.1. Złożoność Algorytmiczna
+
+Problem weryfikacji wiedzy odpowiada ewaluacji zagnieżdżonych kwantyfikatorów, co plasuje go w klasie PSPACE-complete. Rozmiar modelu rośnie wykładniczo ($2^N$).
+
+### 4.2. Wyzwania Implementacyjne i Wektoryzacja (SIMD)
+
+Aby sprostać wymaganiom wydajnościowym (bliskim standardom High-Frequency Trading), projekt wykorzystuje zaawansowane techniki przetwarzania równoległego:
+
+- **Wektoryzacja SIMD**: Operacje na zbiorach światów (`intersect_with`, `count`) są zaimplementowane z wykorzystaniem instrukcji procesora (AVX2 / AVX-512). Dzięki zastosowaniu rejestrów takich jak `__m256i` i instrukcji typu `_mm256_and_si256`, możliwe jest przetwarzanie 256 bitów w jednym cyklu zegara.
+- **Złożoność**: Dzięki wektoryzacji, bazowa złożoność operacji na zbiorze światów zostaje zredukowana z $O(2^N)$ do $O(2^N / 256)$, co pozwala na symulację systemów do $N=20$ w czasie rzeczywistym.
+- **Cache Locality**: Struktura `WorldSet` gwarantuje zwartość danych w pamięci, co minimalizuje kosztowne chybienia pamięci podręcznej (cache misses).
+
+---
+
+## 5. Podsumowanie i Wnioski
+
+Symulacja potwierdza, że w systemach rozproszonych **topologia jest epistemologią**.
+
+1.  **Gęstość krawędzi**: W grafach gęstych ($K_N$) wiedza powszechna buduje się przez zliczanie rund.
+2.  **Dystans fizyczny**: W grafach rzadkich ($C_N$) czas jest zdominowany przez geometrię sieci.
+3.  **Asymetria ról i Pasożytnictwo Informacyjne**: W grafach asymetrycznych (jak $S_N$) występuje zjawisko pasożytnictwa informacyjnego. Centrum grafu błyskawicznie buduje swoją wiedzę kosztem milczenia liści, jednak samo nie jest w stanie wygenerować milczenia, które zwrotnie pomogłoby liściom. Brak krawędzi między liśćmi o tym samym poziomie wiedzy prowadzi do trwałej pułapki informacyjnej.
 
 ## Building
 
