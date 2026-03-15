@@ -17,13 +17,13 @@ void test_init_knowledge_complete_graph_n3() {
     assert(ks.n == 3);
 
     // Player 0 sees players 1 and 2 as 0,0. With w != 0 only world 001 remains.
-    assert(ks.worlds[0].size() == 1);
+    assert(ks.worlds[0].count(ks.active_word_count) == 1);
 
     // Player 1 sees (player 0 = 1, player 2 = 0), so own bit can be 0 or 1.
-    assert(ks.worlds[1].size() == 2);
+    assert(ks.worlds[1].count(ks.active_word_count) == 2);
 
     // Player 2 sees (player 0 = 1, player 1 = 0), so own bit can be 0 or 1.
-    assert(ks.worlds[2].size() == 2);
+    assert(ks.worlds[2].count(ks.active_word_count) == 2);
 }
 
 void test_can_guess_complete_graph_n3() {
