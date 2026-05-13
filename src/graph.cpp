@@ -57,4 +57,41 @@ void Graph::validate_vertex(PlayerId v) const {
     }
 }
 
+Graph Graph::make_complete(std::size_t n) {
+    Graph g(n);
+    for (PlayerId u = 0; u < n; u++) {
+        for (PlayerId v = u + 1; v < n; v++) {
+            g.add_edge(u, v);
+        }
+    }
+
+    return g;
+}
+
+Graph Graph::make_cycle(std::size_t n) {
+    if (n < 3) {
+        throw std::invalid_argument("Cycle graph must have at least 3 vertices.");
+    }
+    Graph g(n);
+    for (PlayerId u = 0; u < n; u++) {
+        g.add_edge(u, (u + 1) % n);
+    }
+
+    return g;
+}
+
+Graph Graph::make_start(std::size_t n) {
+    if (n < 2) {
+        throw std::invalid_argument("Cycle graph must have at least 2 vertices.");
+    }
+    Graph g(n);
+    for (PlayerId u = 1; u < n; u++) {
+        g.add_edge(0, u);
+    }
+
+    return g;
+}
+
 } // namespace hats
+
+

@@ -19,6 +19,12 @@ public:
     [[nodiscard]] bool has_edge(PlayerId u, PlayerId v) const;
     [[nodiscard]] std::size_t degree(PlayerId v) const;
 
+    [[nodiscard]] static Graph make_complete(std::size_t n);
+    [[nodiscard]] static Graph make_cycle(std::size_t n);
+    [[nodiscard]] static Graph make_start(std::size_t n);
+
+    [[nodiscard]] std::size_t size() const noexcept;
+
 private: 
     std::size_t n_{0};
     std::array<VertexMask, kMaxPlayers> adj_{};
