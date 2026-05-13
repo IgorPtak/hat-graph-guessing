@@ -36,13 +36,18 @@ void WorldSet::intersect_with(const WorldSet& other, std::size_t active_word_cou
     }
 }
 
+void WorldSet::subtract(const WorldSet& other, std::size_t active_word_count) noexcept {
+    for (std::size_t i = 0; i < active_word_count; i++) {
+        words[i] &= ~other.words[i];
+    }
+}
+
 bool WorldSet::empty(std::size_t active_word_count) const noexcept { 
     for (std::size_t i = 0; i < active_word_count; ++i) { 
         if (words[i] != 0) return false;
     }
     return true;
 }
-
 
 KnowledgeState init_knowledge(const Graph& g, WorldMask actual_world) { 
     const std::size_t n = g.size();

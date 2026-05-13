@@ -23,6 +23,7 @@ struct WorldSet {
     void set(WorldIndex world_idx) noexcept;
     bool test(WorldIndex world_idx) const noexcept;
     void intersect_with(const WorldSet& other, std::size_t active_word_count) noexcept;
+    void subtract(const WorldSet& other, std::size_t active_word_count) noexcept;
     std::uint32_t count(std::size_t active_word_count) const noexcept;
     bool empty(std::size_t active_word_count) const noexcept;
 };
