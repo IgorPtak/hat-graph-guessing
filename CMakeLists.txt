@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_library(hats_lib
 	src/graph.cpp
 	src/knowledge.cpp
+	src/solver.cpp
 )
 target_include_directories(hats_lib PUBLIC include)
 
@@ -28,6 +29,11 @@ add_executable(test_knowledge tests/test_knowledge.cpp)
 target_link_libraries(test_knowledge PRIVATE hats_lib)
 add_sanitizers(test_knowledge)
 
+add_executable(test_solver tests/test_solver.cpp src/solver.cpp)
+target_link_libraries(test_solver PRIVATE hats_lib)
+add_sanitizers(test_solver)
+
 enable_testing()
 add_test(NAME GraphTests COMMAND test_graph)
 add_test(NAME KnowledgeTests COMMAND test_knowledge)
+add_test(NAME SolverTests COMMAND test_solver)
