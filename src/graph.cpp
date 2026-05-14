@@ -80,7 +80,7 @@ Graph Graph::make_cycle(std::size_t n) {
     return g;
 }
 
-Graph Graph::make_start(std::size_t n) {
+Graph Graph::make_star(std::size_t n) {
     if (n < 2) {
         throw std::invalid_argument("Cycle graph must have at least 2 vertices.");
     }

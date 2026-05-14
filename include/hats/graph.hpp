@@ -21,9 +21,7 @@ public:
 
     [[nodiscard]] static Graph make_complete(std::size_t n);
     [[nodiscard]] static Graph make_cycle(std::size_t n);
-    [[nodiscard]] static Graph make_start(std::size_t n);
-
-    [[nodiscard]] std::size_t size() const noexcept;
+    [[nodiscard]] static Graph make_star(std::size_t n);
 
 private: 
     std::size_t n_{0};
