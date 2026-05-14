@@ -20,7 +20,7 @@ class Solver {
         SimulationResult run();
 
     private:
-        bool apply_silence();
+        bool apply_silence(const std::vector<bool>& already_guessed);
 
         const hats::Graph &graph_;
         hats::KnowledgeState ks_;
