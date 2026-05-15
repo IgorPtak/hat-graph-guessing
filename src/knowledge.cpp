@@ -1,6 +1,9 @@
 #include "hats/knowledge.hpp"
 
 #include <stdexcept>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 namespace hats {
 
@@ -93,6 +96,7 @@ Partitions compute_partitions(const Graph &g, std::size_t world_count) {
     const std::size_t n = g.size();
     Partitions parts(n);
 
+    #pragma omp parallel for schedule(static)
     for (std::size_t i = 0; i < n; i++) {
         parts[i].neighbors_mask = g.neighbors(static_cast<PlayerId>(i));
         parts[i].classes.reserve(world_count / 2);
