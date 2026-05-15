@@ -6,50 +6,57 @@ namespace solver {
 
 Solver::Solver(const hats::Graph &graph, hats::WorldMask actual_world)
     : graph_(graph),
-    ks_(hats::init_knowledge(graph, actual_world)) {
+      ks_(hats::init_knowledge(graph, actual_world)),
+      parts_(hats::compute_partitions(graph, ks_.world_count)) {
 
-        global_valid_worlds_.clear_all();
-
-        for (std::size_t w = 1; w < ks_.world_count; w++) {
-            global_valid_worlds_.set(static_cast<hats::WorldIndex>(w));
-        }
+    global_valid_worlds_.clear_all();
+    for (std::size_t w = 1; w < ks_.world_count; w++) {
+        global_valid_worlds_.set(static_cast<hats::WorldIndex>(w));
     }
+}
 
-bool Solver::apply_silence(const std::vector<bool>& already_guessed) {
+bool Solver::apply_silence(const std::vector<bool> &already_guessed) {
     hats::WorldSet worlds_to_remove;
     worlds_to_remove.clear_all();
     bool any_reduced = false;
 
-    for (std::size_t w = 1; w < ks_.world_count; w++) {
-        if (!global_valid_worlds_.test(static_cast<hats::WorldIndex>(w))) {
+    // Iterate over equivalence classes per agent instead of per world.
+    // All worlds sharing the same view (neighbors' bits) are indistinguishable to that agent,
+    // so the "can guess?" answer is identical for the whole class — O(n * 2^n) total.
+    for (std::size_t player = 0; player < ks_.n; player++) {
+        if (already_guessed[player])
             continue;
-        }
 
-        hats::KnowledgeState hypothetical_ks = hats::init_knowledge(graph_, static_cast<hats::WorldMask>(w));
+        for (const auto &[view, worlds_in_class] : parts_[player].classes) {
+            bool seen_zero = false;
+            bool seen_one = false;
 
-        for (std::size_t player = 0; player < ks_.n; player++) {
-            if (already_guessed[player]) continue;
-            hypothetical_ks.worlds[player].intersect_with(global_valid_worlds_, ks_.world_count);
-        }
-
-        bool somebody_guesses = false;
-        for (std::size_t player = 0; player < ks_.n; player++) {
-            if (already_guessed[player]) continue;
-            if (hats::can_guess(hypothetical_ks, static_cast<hats::PlayerId>(player)).first) {
-                somebody_guesses = true;
-                break;
+            for (const hats::WorldIndex w : worlds_in_class) {
+                if (!global_valid_worlds_.test(w))
+                    continue;
+                if (hats::test_bit(static_cast<hats::WorldMask>(w),
+                                   static_cast<hats::PlayerId>(player)))
+                    seen_one = true;
+                else
+                    seen_zero = true;
+                if (seen_zero && seen_one)
+                    break;
             }
-        }
 
-        if (somebody_guesses) {
-            worlds_to_remove.set(static_cast<hats::WorldIndex>(w));
-            any_reduced = true;
+            // seen_zero != seen_one means all active worlds in the class agree on player's color
+            if (seen_zero != seen_one) {
+                for (const hats::WorldIndex w : worlds_in_class) {
+                    if (global_valid_worlds_.test(w)) {
+                        worlds_to_remove.set(w);
+                        any_reduced = true;
+                    }
+                }
+            }
         }
     }
 
     if (any_reduced) {
         global_valid_worlds_.subtract(worlds_to_remove, ks_.active_word_count);
-
         for (std::size_t player = 0; player < ks_.n; player++) {
             ks_.worlds[player].intersect_with(global_valid_worlds_, ks_.active_word_count);
         }
@@ -57,35 +64,6 @@ bool Solver::apply_silence(const std::vector<bool>& already_guessed) {
 
     return any_reduced;
 }
-
-
-// Version with rounds required for all players to guess is yet to be implemented
-// For now we get information when the first guess appear
-// SimulationResult Solver::run() {
-//     int rounds = 0;
-
-//     while (true) {
-//         int guess_count = 0;
-
-//         for (std::size_t player = 0; player < ks_.n; player++) {
-//             if (hats::can_guess(ks_, static_cast<hats::PlayerId>(player)).first) {
-//                 guess_count++;
-//             }
-//         }
-
-//         if (guess_count > 0) {
-//             return {true, false, rounds};
-//         }
-
-//         bool has_worlds_reduced = apply_silence();
-
-//         if (!has_worlds_reduced) {
-//             return {false, true, rounds};
-//         }
-
-//         rounds++;
-//     }
-// }
 
 SimulationResult Solver::run() {
     int rounds = 0;
@@ -98,7 +76,8 @@ SimulationResult Solver::run() {
         worlds_to_delete.clear_all();
 
         for (std::size_t player = 0; player < ks_.n; player++) {
-            if (already_guessed[player]) continue;
+            if (already_guessed[player])
+                continue;
 
             auto guess = hats::can_guess(ks_, static_cast<hats::PlayerId>(player));
             if (guess.first) {
@@ -107,24 +86,39 @@ SimulationResult Solver::run() {
                 total_guess++;
 
                 for (std::size_t w = 1; w < ks_.world_count; w++) {
-                    if (!global_valid_worlds_.test(w)) continue;
+                    if (!global_valid_worlds_.test(w))
+                        continue;
 
-                    int color_in_w = hats::test_bit(static_cast<hats::WorldMask>(w), player) ? 1 : 0;
+                    int color_in_w =
+                        hats::test_bit(static_cast<hats::WorldMask>(w), player) ? 1 : 0;
                     if (color_in_w != guess.second) {
                         worlds_to_delete.set(w);
                         continue;
                     }
 
-                    hats::KnowledgeState hypothetical_ks = hats::init_knowledge(graph_, static_cast<hats::WorldMask>(w));
-                    hypothetical_ks.worlds[player].intersect_with(global_valid_worlds_, ks_.world_count);
-
-                    if (!hats::can_guess(hypothetical_ks, static_cast<hats::PlayerId>(player)).first) {
-                        worlds_to_delete.set(static_cast<hats::WorldIndex>(w));
+                    // Check if player could actually guess in world w using precomputed partition.
+                    const hats::VertexMask view =
+                        static_cast<hats::WorldMask>(w) & parts_[player].neighbors_mask;
+                    const auto &cls = parts_[player].classes.at(view);
+                    bool cls_seen_zero = false;
+                    bool cls_seen_one = false;
+                    for (const hats::WorldIndex w2 : cls) {
+                        if (!global_valid_worlds_.test(w2))
+                            continue;
+                        if (hats::test_bit(static_cast<hats::WorldMask>(w2),
+                                           static_cast<hats::PlayerId>(player)))
+                            cls_seen_one = true;
+                        else
+                            cls_seen_zero = true;
+                        if (cls_seen_zero && cls_seen_one)
+                            break;
                     }
+                    if (cls_seen_zero == cls_seen_one)
+                        worlds_to_delete.set(static_cast<hats::WorldIndex>(w));
                 }
             }
         }
-        if (total_guess == ks_.n) {
+        if (total_guess == static_cast<int>(ks_.n)) {
             return {true, false, rounds};
         }
 
@@ -144,4 +138,4 @@ SimulationResult Solver::run() {
     }
 }
 
-}
+} // namespace solver
