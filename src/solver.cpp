@@ -7,22 +7,18 @@ namespace solver {
 Solver::Solver(const hats::Graph &graph, hats::WorldMask actual_world)
     : graph_(graph),
       ks_(hats::init_knowledge(graph, actual_world)),
-      parts_(hats::compute_partitions(graph, ks_.world_count)) {
+      parts_(hats::compute_partitions(graph, ks_.world_count)),
+      global_valid_worlds_(ks_.active_word_count) {
 
-    global_valid_worlds_.clear_all();
     for (std::size_t w = 1; w < ks_.world_count; w++) {
         global_valid_worlds_.set(static_cast<hats::WorldIndex>(w));
     }
 }
 
 bool Solver::apply_silence(const std::vector<bool> &already_guessed) {
-    hats::WorldSet worlds_to_remove;
-    worlds_to_remove.clear_all();
+    hats::WorldSet worlds_to_remove(ks_.active_word_count);
     bool any_reduced = false;
 
-    // Iterate over equivalence classes per agent instead of per world.
-    // All worlds sharing the same view (neighbors' bits) are indistinguishable to that agent,
-    // so the "can guess?" answer is identical for the whole class — O(n * 2^n) total.
     for (std::size_t player = 0; player < ks_.n; player++) {
         if (already_guessed[player])
             continue;
@@ -43,7 +39,8 @@ bool Solver::apply_silence(const std::vector<bool> &already_guessed) {
                     break;
             }
 
-            // seen_zero != seen_one means all active worlds in the class agree on player's color
+            // seen_zero != seen_one: all active worlds in the class agree on player's color,
+            // so player would have spoken — silence eliminates these worlds.
             if (seen_zero != seen_one) {
                 for (const hats::WorldIndex w : worlds_in_class) {
                     if (global_valid_worlds_.test(w)) {
@@ -55,12 +52,8 @@ bool Solver::apply_silence(const std::vector<bool> &already_guessed) {
         }
     }
 
-    if (any_reduced) {
-        global_valid_worlds_.subtract(worlds_to_remove, ks_.active_word_count);
-        for (std::size_t player = 0; player < ks_.n; player++) {
-            ks_.worlds[player].intersect_with(global_valid_worlds_, ks_.active_word_count);
-        }
-    }
+    if (any_reduced)
+        global_valid_worlds_.subtract(worlds_to_remove);
 
     return any_reduced;
 }
@@ -72,14 +65,16 @@ SimulationResult Solver::run() {
 
     while (true) {
         bool guess_this_round = false;
-        hats::WorldSet worlds_to_delete;
-        worlds_to_delete.clear_all();
+        hats::WorldSet worlds_to_delete(ks_.active_word_count);
 
         for (std::size_t player = 0; player < ks_.n; player++) {
             if (already_guessed[player])
                 continue;
 
-            auto guess = hats::can_guess(ks_, static_cast<hats::PlayerId>(player));
+            const hats::VertexMask actual_view = ks_.actual_views[player];
+            const auto &actual_cls = parts_[player].classes.at(actual_view);
+            auto guess = hats::can_guess(actual_cls, global_valid_worlds_,
+                                         static_cast<hats::PlayerId>(player));
             if (guess.first) {
                 guess_this_round = true;
                 already_guessed[player] = true;
@@ -96,13 +91,13 @@ SimulationResult Solver::run() {
                         continue;
                     }
 
-                    // Check if player could actually guess in world w using precomputed partition.
+                    // Check if player could actually guess in world w.
                     const hats::VertexMask view =
                         static_cast<hats::WorldMask>(w) & parts_[player].neighbors_mask;
-                    const auto &cls = parts_[player].classes.at(view);
+                    const auto &view_cls = parts_[player].classes.at(view);
                     bool cls_seen_zero = false;
                     bool cls_seen_one = false;
-                    for (const hats::WorldIndex w2 : cls) {
+                    for (const hats::WorldIndex w2 : view_cls) {
                         if (!global_valid_worlds_.test(w2))
                             continue;
                         if (hats::test_bit(static_cast<hats::WorldMask>(w2),
@@ -118,15 +113,13 @@ SimulationResult Solver::run() {
                 }
             }
         }
+
         if (total_guess == static_cast<int>(ks_.n)) {
             return {true, false, rounds};
         }
 
         if (guess_this_round) {
-            global_valid_worlds_.subtract(worlds_to_delete, ks_.active_word_count);
-            for (std::size_t player = 0; player < ks_.n; player++) {
-                ks_.worlds[player].intersect_with(global_valid_worlds_, ks_.active_word_count);
-            }
+            global_valid_worlds_.subtract(worlds_to_delete);
         } else {
             bool has_reduced = apply_silence(already_guessed);
             if (!has_reduced) {

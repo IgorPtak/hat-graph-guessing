@@ -2,7 +2,6 @@
 
 #include "hats/graph.hpp"
 #include "hats/types.hpp"
-#include <array>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -10,34 +9,40 @@
 namespace hats {
 
 inline constexpr std::size_t kMaxSupportedPlayers = 20;
-inline constexpr std::size_t kMaxWorldCount = std::size_t{1} << kMaxSupportedPlayers;
 inline constexpr std::size_t kWordBits = 64;
-inline constexpr std::size_t kMaxWorldWords = (kMaxWorldCount + kWordBits - 1) / kWordBits;
 
 using WorldIndex = std::uint32_t;
 
+// Opt 3: dynamic size — vector sized to active_word_count, not 128 KB fixed array.
 struct WorldSet {
-    std::array<std::uint64_t, kMaxWorldWords> words{};
+    std::vector<std::uint64_t> words;
+
+    WorldSet() = default;
+    explicit WorldSet(std::size_t word_count) : words(word_count, 0) {}
 
     void clear_all() noexcept;
     void set(WorldIndex world_idx) noexcept;
     bool test(WorldIndex world_idx) const noexcept;
-    void intersect_with(const WorldSet &other, std::size_t active_word_count) noexcept;
-    void subtract(const WorldSet &other, std::size_t active_word_count) noexcept;
-    void union_with(const WorldSet &other, std::size_t active_world_count) noexcept;
-    std::uint32_t count(std::size_t active_word_count) const noexcept;
-    bool empty(std::size_t active_word_count) const noexcept;
+    // Opt 1: active_word_count dropped — vector knows its own size.
+    void intersect_with(const WorldSet &other) noexcept;
+    void subtract(const WorldSet &other) noexcept;
+    void union_with(const WorldSet &other) noexcept;
+    std::uint32_t count() const noexcept;
+    bool empty() const noexcept;
 };
 
 struct KnowledgeState {
     std::size_t n{0};
     std::size_t world_count{0};
     std::size_t active_word_count{0};
-    std::vector<WorldSet> worlds;
+    // Opt 2: actual_views replaces worlds — computed once, O(n) storage.
+    std::vector<VertexMask> actual_views;
 };
 [[nodiscard]] KnowledgeState init_knowledge(const Graph &g, WorldMask actual_world);
 
-[[nodiscard]] std::pair<bool, int> can_guess(const KnowledgeState &ks, PlayerId v);
+// Opt 2: takes partition class + global valid set instead of ks_.worlds[v].
+[[nodiscard]] std::pair<bool, int> can_guess(const std::vector<WorldIndex> &cls,
+                                             const WorldSet &global_valid_worlds, PlayerId v);
 
 // Maps each possible view (neighbors' bits) to the list of worlds consistent with that view.
 struct AgentPartition {
