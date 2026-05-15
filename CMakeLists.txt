@@ -15,6 +15,28 @@ target_include_directories(hats_lib PUBLIC include)
 include(cmake/Sanitizers.cmake)
 add_sanitizers(hats_lib)
 
+# Apple Clang ships without OpenMP; help CMake find Homebrew's libomp.
+if(APPLE)
+    execute_process(
+        COMMAND brew --prefix libomp
+        OUTPUT_VARIABLE HOMEBREW_LIBOMP_PREFIX
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET)
+    if(HOMEBREW_LIBOMP_PREFIX)
+        set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I${HOMEBREW_LIBOMP_PREFIX}/include")
+        set(OpenMP_CXX_LIB_NAMES "omp")
+        set(OpenMP_omp_LIBRARY "${HOMEBREW_LIBOMP_PREFIX}/lib/libomp.dylib")
+    endif()
+endif()
+
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(hats_lib PUBLIC OpenMP::OpenMP_CXX)
+    message(STATUS "OpenMP ${OpenMP_CXX_VERSION} enabled")
+else()
+    message(STATUS "OpenMP not found — building single-threaded")
+endif()
+
 # Application
 add_executable(hats_app apps/main.cpp)
 target_link_libraries(hats_app PRIVATE hats_lib)

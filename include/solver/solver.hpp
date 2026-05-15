@@ -24,6 +24,7 @@ class Solver {
 
         const hats::Graph &graph_;
         hats::KnowledgeState ks_;
+        hats::Partitions parts_;
         hats::WorldSet global_valid_worlds_;
 };
 
