@@ -3,6 +3,7 @@ project(hats VERSION 0.1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Library
 add_library(hats_lib
@@ -59,3 +60,18 @@ enable_testing()
 add_test(NAME GraphTests COMMAND test_graph)
 add_test(NAME KnowledgeTests COMMAND test_knowledge)
 add_test(NAME SolverTests COMMAND test_solver)
+
+# Python bindings
+find_package(pybind11 QUIET)
+if(NOT pybind11_FOUND)
+    include(FetchContent)
+    FetchContent_Declare(
+        pybind11
+        GIT_REPOSITORY https://github.com/pybind/pybind11.git
+        GIT_TAG        v2.13.6
+    )
+    FetchContent_MakeAvailable(pybind11)
+endif()
+
+pybind11_add_module(hats_py src/bindings.cpp)
+target_link_libraries(hats_py PRIVATE hats_lib)
