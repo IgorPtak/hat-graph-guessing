@@ -2,7 +2,8 @@
 
 #include "hats/types.hpp"
 #include "hats/graph.hpp"
-#include "hats/knowledge.hpp" 
+#include "hats/knowledge.hpp"
+#include <cstdint>
 #include <vector>
 
 namespace solver {
@@ -13,11 +14,22 @@ struct SimulationResult {
     int rounds;
 };
 
+struct RoundRecord {
+    int round;
+    std::vector<int> guessed_players;
+    std::vector<int> guessed_colors;
+    std::vector<std::uint32_t> valid_worlds;
+    bool silence;
+};
+
+using SimulationTrace = std::vector<RoundRecord>;
+
 class Solver {
     public:
         Solver(const hats::Graph &graph, hats::WorldMask actual_world);
 
         SimulationResult run();
+        SimulationTrace trace();
 
     private:
         bool apply_silence(const std::vector<bool>& already_guessed);

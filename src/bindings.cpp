@@ -33,12 +33,6 @@ PYBIND11_MODULE(hats_py, m) {
                    ", rounds=" + std::to_string(r.rounds) + ")";
         });
 
-    // keep_alive<1,2>: Graph (arg 2) must outlive Solver (self = arg 1).
-    py::class_<Solver>(m, "Solver")
-        .def(py::init<const Graph &, WorldMask>(), py::arg("graph"), py::arg("actual_world"),
-             py::keep_alive<1, 2>())
-        .def("run", &Solver::run);
-
     // --- optional: expose internals for step-by-step visualisation ---
 
     py::class_<KnowledgeState>(m, "KnowledgeState")
@@ -56,6 +50,27 @@ PYBIND11_MODULE(hats_py, m) {
             return d;
         });
 
-    m.def("init_knowledge", &init_knowledge, py::arg("graph"), py::arg("actual_world"));
+    py::class_<RoundRecord>(m, "RoundRecord")
+        .def_readonly("round",           &RoundRecord::round)
+        .def_readonly("guessed_players", &RoundRecord::guessed_players)
+        .def_readonly("guessed_colors",  &RoundRecord::guessed_colors)
+        .def_readonly("valid_worlds",    &RoundRecord::valid_worlds)
+        .def_readonly("silence",         &RoundRecord::silence)
+        .def("__repr__", [](const RoundRecord &rec) {
+            return "RoundRecord(round=" + std::to_string(rec.round) +
+                   ", silence=" + (rec.silence ? "True" : "False") +
+                   ", guessed=" + std::to_string(rec.guessed_players.size()) +
+                   ", valid_worlds=" + std::to_string(rec.valid_worlds.size()) + ")";
+        });
+
+    // keep_alive<1,2>: Graph (arg 2) must outlive Solver (self = arg 1).
+    py::class_<Solver>(m, "Solver")
+        .def(py::init<const Graph &, WorldMask>(),
+             py::arg("graph"), py::arg("actual_world"),
+             py::keep_alive<1, 2>())
+        .def("run",   &Solver::run)
+        .def("trace", &Solver::trace);
+
+    m.def("init_knowledge",     &init_knowledge,     py::arg("graph"), py::arg("actual_world"));
     m.def("compute_partitions", &compute_partitions, py::arg("graph"), py::arg("world_count"));
 }
