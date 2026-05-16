@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8">
+    <title>Problem Kapeluszy - Prezentacja</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.min.css">
+    
+    <style>
+        /* Niestandardowa szata graficzna dopasowana do Twojego screenshota */
+        .reveal ul, .reveal ol {
+            display: block;      /* Wymusza, by lista zajmowała pełną szerokość slajdu */
+            text-align: left;    /* Wyrównuje tekst podpunktów do lewej krawędzi */
+            margin-left: 10%;    /* Bezpieczny margines, aby tekst nie dotykał samej krawędzi ekranu */
+        }
+        .reveal h4 {
+            margin-bottom: 20px; /* Zwiększa odstęp pomiędzy nagłówkiem a obrazkiem */
+        }
+        .reveal {
+            background-color: #FDFFF2; /* Jasnożółte tło */
+            color: #2B2B2B;            /* Ciemnoszary tekst */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .reveal h1, .reveal h2, .reveal h3 {
+            color: #3B5998;            /* Granat węzłów */
+            text-transform: none;
+            font-weight: bold;
+        }
+        .reveal ul {
+            list-style-type: square;
+            color: #D9534F;            /* Czerwień węzłów dla punktorów */
+        }
+        .reveal ul li {
+            margin-bottom: 0.5em;
+        }
+        .reveal ul li span {
+            color: #2B2B2B;            /* Powrót do koloru tekstu wewnątrz listy */
+        }
+        .reveal table {
+            font-size: 0.8em;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .reveal th {
+            color: #3B5998;
+            border-bottom: 2px solid #3B5998;
+            padding: 10px;
+            text-align: left;
+        }
+        .reveal td {
+            border-bottom: 1px solid #B0B0B0;
+            padding: 10px;
+        }
+        .highlight-red { color: #D9534F; font-weight: bold; }
+        .highlight-blue { color: #3B5998; font-weight: bold; }
+        
+        /* Layout dla dwóch kolumn */
+        .col-container {
+            display: flex;
+            justify-content: space-between;
+        }
+        .col {
+            flex: 1;
+            margin: 0 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+
+            <section>
+                <h1>Problem Kapeluszy</h1>
+                <h3>Dynamiczna Logika Epistemiczna</h3>
+                <p>Ewolucja wiedzy w systemach wieloagentowych</p>
+            </section>
+
+            <section>
+                <h2>Architektura Stanów</h2>
+                <ul>
+                    <li><span><strong>Przestrzeń Możliwych Światów ($\Omega$):</strong> Globalny stan systemu to wektor binarny $\omega \in \{0, 1\}^N$.</span></li>
+                    <li><span><strong>Relacja Nierozróżnialności ($R_i$):</strong> Zdefiniowana przez topologię grafu. Agenci nie widzą swoich węzłów.
+                        $$(\omega, \omega') \in R_i \iff \forall j \in N(i), \omega_j = \omega'_j$$
+                    </span></li>
+                    <li><span><strong>Stan Epistemiczny:</strong> Zbiór światów, które agent $i$ uważa za możliwe:
+                        $$\mathcal{K}_i(\omega) = \{ \omega' \in \Omega \mid (\omega, \omega') \in R_i \}$$
+                    </span></li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Dynamika Wiedzy</h2>
+                <p style="text-align: left; font-size: 0.8em;">Ewolucja zachodzi poprzez logikę ogłoszeń publicznych (PAL).</p>
+                <ul>
+                    <li><span><strong>Inicjalizacja ($\phi_0$):</strong> "Istnieje co najmniej jedna czerwona czapka". Usuwa wektor $\mathbf{0}$. Wymaga, by w rzeczywistości $\omega^* \neq \mathbf{0}$.</span></li>
+                    <li><span><strong>Operator Milczenia ($\sigma_t$):</strong>
+                        $$\sigma_t = \bigwedge_{j \in V} \neg (K_j p_j \lor K_j \neg p_j)$$
+                    </span></li>
+                    <li><span><strong>Rekurencyjna Redukcja:</strong>
+                        $$\Omega_{t+1} = \{ \omega \in \Omega_t \mid \Omega_t, \omega \models \sigma_t \}$$
+                    </span></li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Analiza Topologii</h2>
+                <ul>
+                    <li><span class="highlight-red">Graf Pełny ($K_N$):</span> <span>Wiedza budowana w czasie. Przy $k$ czerwonych czapkach, agenci zgadują w rundzie $T=k-1$.</span></li>
+                    <li><span class="highlight-red">Cykl ($C_N$):</span> <span>Horyzont Epistemiczny. Prędkość propagacji zależy od odległości geodezyjnej $d(i, j)$.</span></li>
+                    <li><span class="highlight-red">Gwiazda ($S_N$):</span> <span>Deadlock i pasożytnictwo informacyjne. Jeśli centrum ma $0$, a dwa liście $1$, weryfikacja staje w rundzie $t=1$.</span></li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Wyzwania Obliczeniowe</h2>
+                <ul>
+                    <li><span>Weryfikacja wiedzy jest problemem <strong>PSPACE-complete</strong> (zagnieżdżone kwantyfikatory, przestrzeń $2^N$).</span></li>
+                    <li><span><strong>Wektoryzacja SIMD:</strong> Instrukcje AVX2 / AVX-512 pozwalają przetwarzać 256 bitów w jednym cyklu zegara.</span></li>
+                    <li><span>Złożoność operacji na zbiorach spada z $\mathcal{O}(2^N)$ do $\mathcal{O}(2^N / 256)$. Bez tego systemy HFT dławiłyby się przy $N > 10$.</span></li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Topologia: Graf Pełny</h2>
+                <img src="hats_del_complete_n5.gif" alt="Symulacja grafu pełnego" style="max-height: 60vh; border: 2px solid #3B5998; border-radius: 8px;">
+            </section>
+
+            <section>
+                <h2>Porównanie: Cykl vs Gwiazda</h2>
+                <div class="col-container">
+                    <div class="col">
+                        <h4>Cykl</h4>
+                        <img src="hats_del_cycle_n4.gif" alt="Symulacja cyklu" style="max-width: 100%; border: 1px solid #B0B0B0;">
+                    </div>
+                    <div class="col">
+                        <h4>Gwiazda</h4>
+                        <img src="hats_del_star_n4.gif" alt="Symulacja gwiazdy" style="max-width: 100%; border: 1px solid #B0B0B0;">
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h2>Topologie Asymetryczne</h2>
+                <div class="col-container">
+                    <div class="col">
+                        <h4>Latawiec</h4>
+                        <img src="hats_del_kite_n4.gif" alt="Symulacja latawca" style="max-width: 100%; border: 1px solid #B0B0B0;">
+                    </div>
+                    <div class="col">
+                        <h4>Domek</h4>
+                        <img src="hats_del_house_n5.gif" alt="Symulacja domku" style="max-width: 100%; border: 1px solid #B0B0B0;">
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h2>Topologie Asymetryczne</h2>
+                <div class="col-container">
+                    <div class="col">
+                        <h4>Ścieżka</h4>
+                        <img src="hats_del_path_n4.gif" alt="Symulacja ścieżki" style="max-width: 100%; border: 1px solid #B0B0B0;">
+                    </div>
+                    <div class="col">
+                        <h4>Koło</h4>
+                        <img src="hats_del_wheel_n5.gif" alt="Symulacja koła" style="max-width: 100%; border: 1px solid #B0B0B0;">
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h2>Wnioski końcowe</h2>
+                <p style="color: #3B5998; font-weight: bold; font-size: 1.3em; margin-bottom: 30px;">
+                    Topologia to epistemologia.
+                </p>
+                <ul>
+                    <li>
+                        <span><strong>Gęstość:</strong> W grafach gęstych (np. pełny) wiedza buduje się sekwencyjnie poprzez zliczanie kolejnych rund.</span>
+                    </li>
+                    <li>
+                        <span><strong>Geometria:</strong> W grafach rzadkich (np. cykl) czas propagacji milczenia jest zdominowany przez dystans fizyczny między agentami.</span>
+                    </li>
+                    <li>
+                        <span><strong>Asymetria ról:</strong> W grafach o nieregularnej strukturze (np. gwiazda) występuje zjawisko pasożytnictwa informacyjnego. Centrum buduje wiedzę, doprowadzając liście do trwałej pułapki informacyjnej.</span>
+                    </li>
+                </ul>
+            </section>
+
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/plugin/math/math.js"></script>
+    <script>
+        Reveal.initialize({
+            controls: true,
+            progress: true,
+            center: true,
+            hash: true,
+            transition: 'slide',
+            plugins: [ RevealMath.MathJax3 ] // Aktywacja renderowania matematyki
+        });
+    </script>
+</body>
+</html>
