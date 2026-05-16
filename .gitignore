@@ -6,6 +6,7 @@ lib/
 
 # IDE files
 .vscode/
+.cache/
 .idea/
 *.swp
 *.swo
