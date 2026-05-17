@@ -31,6 +31,20 @@ bool Graph::add_edge(PlayerId u, PlayerId v) {
     return true;
 }
 
+bool Graph::add_directed_edge(PlayerId u, PlayerId v) {
+    validate_vertex(u);
+    validate_vertex(v);
+    if (u == v) {
+        throw std::invalid_argument("self-loops are not allowed");
+    }
+    const VertexMask edge_bit = bit(v);
+    if (adj_[u] & edge_bit) {
+        return false;
+    }
+    adj_[u] |= edge_bit;
+    return true;
+}
+
 VertexMask Graph::neighbors(PlayerId v) const {
     validate_vertex(v);
     return adj_[v];
@@ -92,6 +106,52 @@ Graph Graph::make_star(std::size_t n) {
     return g;
 }
 
+
+Graph Graph::make_path(std::size_t n) {
+    if (n < 2) {
+        throw std::invalid_argument("Path graph must have at least 2 vertices.");
+    }
+    Graph g(n);
+    for (PlayerId u = 0; u + 1 < n; u++) {
+        g.add_edge(u, static_cast<PlayerId>(u + 1));
+    }
+    return g;
+}
+
+Graph Graph::make_cycle_with_chord(std::size_t n, PlayerId chord_u, PlayerId chord_v) {
+    Graph g = make_cycle(n);
+    g.add_edge(chord_u, chord_v);
+    return g;
+}
+
+Graph Graph::make_hypercube(std::size_t k) {
+    if (k == 0 || k > 6) {
+        throw std::invalid_argument("Hypercube dimension must be in [1, 6] (max 64 nodes).");
+    }
+    const std::size_t n = std::size_t{1} << k;
+    Graph g(n);
+    for (PlayerId node = 0; node < static_cast<PlayerId>(n); node++) {
+        for (std::size_t bit = 0; bit < k; bit++) {
+            const PlayerId neighbor = static_cast<PlayerId>(node ^ (1u << bit));
+            if (neighbor > node) {
+                g.add_edge(node, neighbor);
+            }
+        }
+    }
+    return g;
+}
+
+Graph Graph::make_ordered_visibility(std::size_t n) {
+    if (n < 2) {
+        throw std::invalid_argument("Ordered visibility graph must have at least 2 vertices.");
+    }
+    Graph g(n);
+    for (PlayerId k = 0; k < static_cast<PlayerId>(n); ++k) {
+        for (PlayerId j = static_cast<PlayerId>(k + 1); j < static_cast<PlayerId>(n); ++j) {
+            g.add_directed_edge(k, j);
+        }
+    }
+    return g;
+}
+
 } // namespace hats
-
-

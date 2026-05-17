@@ -8,7 +8,7 @@
 
 namespace hats {
 
-inline constexpr std::size_t kMaxSupportedPlayers = 20;
+inline constexpr std::size_t kMaxSupportedPlayers = 24;
 inline constexpr std::size_t kWordBits = 64;
 
 using WorldIndex = std::uint32_t;

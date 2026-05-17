@@ -21,7 +21,13 @@ PYBIND11_MODULE(hats_py, m) {
         .def("neighbors", &Graph::neighbors, py::arg("v"))
         .def_static("make_complete", &Graph::make_complete, py::arg("n"))
         .def_static("make_cycle", &Graph::make_cycle, py::arg("n"))
-        .def_static("make_star", &Graph::make_star, py::arg("n"));
+        .def_static("make_star", &Graph::make_star, py::arg("n"))
+        .def_static("make_path", &Graph::make_path, py::arg("n"))
+        .def_static("make_cycle_with_chord", &Graph::make_cycle_with_chord,
+                    py::arg("n"), py::arg("chord_u"), py::arg("chord_v"))
+        .def_static("make_hypercube", &Graph::make_hypercube, py::arg("k"))
+        .def_static("make_ordered_visibility", &Graph::make_ordered_visibility, py::arg("n"))
+        .def("add_directed_edge", &Graph::add_directed_edge, py::arg("u"), py::arg("v"));
 
     py::class_<SimulationResult>(m, "SimulationResult")
         .def_readonly("success", &SimulationResult::success)
@@ -51,11 +57,12 @@ PYBIND11_MODULE(hats_py, m) {
         });
 
     py::class_<RoundRecord>(m, "RoundRecord")
-        .def_readonly("round",           &RoundRecord::round)
-        .def_readonly("guessed_players", &RoundRecord::guessed_players)
-        .def_readonly("guessed_colors",  &RoundRecord::guessed_colors)
-        .def_readonly("valid_worlds",    &RoundRecord::valid_worlds)
-        .def_readonly("silence",         &RoundRecord::silence)
+        .def_readonly("round",             &RoundRecord::round)
+        .def_readonly("guessed_players",   &RoundRecord::guessed_players)
+        .def_readonly("guessed_colors",    &RoundRecord::guessed_colors)
+        .def_readonly("valid_worlds",      &RoundRecord::valid_worlds)
+        .def_readonly("agent_class_sizes", &RoundRecord::agent_class_sizes)
+        .def_readonly("silence",           &RoundRecord::silence)
         .def("__repr__", [](const RoundRecord &rec) {
             return "RoundRecord(round=" + std::to_string(rec.round) +
                    ", silence=" + (rec.silence ? "True" : "False") +
