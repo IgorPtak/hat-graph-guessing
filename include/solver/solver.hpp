@@ -19,6 +19,8 @@ struct RoundRecord {
     std::vector<int> guessed_players;
     std::vector<int> guessed_colors;
     std::vector<std::uint32_t> valid_worlds;
+    // |[i, view_i] ∩ W_valid| for each agent i: number of worlds still consistent with agent i's observation
+    std::vector<std::uint32_t> agent_class_sizes;
     bool silence;
 };
 

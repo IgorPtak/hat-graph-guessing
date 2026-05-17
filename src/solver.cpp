@@ -195,6 +195,21 @@ SimulationTrace Solver::trace() {
         return v;
     };
 
+    // Count worlds still consistent with each agent's actual observation.
+    auto class_sizes_snapshot = [&]() {
+        std::vector<std::uint32_t> sizes(ks_.n, 0);
+        for (std::size_t i = 0; i < ks_.n; ++i) {
+            const hats::VertexMask view = ks_.actual_views[i];
+            const auto it = parts_[i].classes.find(view);
+            if (it == parts_[i].classes.end()) continue;
+            for (const hats::WorldIndex ww : it->second) {
+                if (global_valid_worlds_.test(ww))
+                    ++sizes[i];
+            }
+        }
+        return sizes;
+    };
+
     struct Guesser { std::size_t player; int color; };
 
     while (true) {
@@ -221,7 +236,8 @@ SimulationTrace Solver::trace() {
         }
 
         if (total_guess == static_cast<int>(ks_.n)) {
-            rec.valid_worlds = snapshot();
+            rec.valid_worlds     = snapshot();
+            rec.agent_class_sizes = class_sizes_snapshot();
             result.push_back(std::move(rec));
             break;
         }
@@ -268,13 +284,15 @@ SimulationTrace Solver::trace() {
             rec.silence = true;
             const bool reduced = apply_silence(already_guessed);
             if (!reduced) {
-                rec.valid_worlds = snapshot();
+                rec.valid_worlds      = snapshot();
+                rec.agent_class_sizes = class_sizes_snapshot();
                 result.push_back(std::move(rec));
                 break;
             }
         }
 
-        rec.valid_worlds = snapshot();
+        rec.valid_worlds      = snapshot();
+        rec.agent_class_sizes = class_sizes_snapshot();
         result.push_back(std::move(rec));
         round_num++;
     }
