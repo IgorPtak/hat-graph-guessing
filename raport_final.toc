@@ -1,0 +1,44 @@
+\xpg@aux {}{polish}
+\contentsline {section}{\numberline {1}Streszczenie}{3}{section.1}%
+\contentsline {section}{\numberline {2}Wstęp teoretyczny i formalizacja}{3}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Problem i notacje}{3}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Protokół gry i publiczne oznajmienia}{4}{subsection.2.2}%
+\contentsline {section}{\numberline {3}Architektura symulatora}{4}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Przegląd modułów}{4}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Reprezentacja \texttt {WorldSet}}{5}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Partycje wiedzy}{5}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}Algorytm symulatora}{5}{subsection.3.4}%
+\contentsline {subsection}{\numberline {3.5}Metryka entropii epistemicznej}{6}{subsection.3.5}%
+\contentsline {subsection}{\numberline {3.6}Nowe topologie w C++}{6}{subsection.3.6}%
+\contentsline {subsection}{\numberline {3.7}Złożoność obliczeniowa}{7}{subsection.3.7}%
+\contentsline {section}{\numberline {4}Wyniki symulacji}{7}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Graf pełny $K_n$}{7}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Cykl $C_n$}{7}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Graf gwiazdowy $S_n$}{8}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}Graf ścieżkowy $P_n$}{9}{subsection.4.4}%
+\contentsline {subsection}{\numberline {4.5}Hiperkostka $Q_k$}{9}{subsection.4.5}%
+\contentsline {subsection}{\numberline {4.6}Łamanie symetrii: $C_4$ z cięciwą $(0,2)$}{9}{subsection.4.6}%
+\contentsline {subsection}{\numberline {4.7}Graf kołowy $W_n$}{10}{subsection.4.7}%
+\contentsline {subsection}{\numberline {4.8}$K_n$ bez jednej krawędzi: częściowy sukces}{11}{subsection.4.8}%
+\contentsline {subsection}{\numberline {4.9}Przegląd porównawczy topologii}{12}{subsection.4.9}%
+\contentsline {subsection}{\numberline {4.10}Graf dwudzielny $K_{m,n}$ i Zagadka Trzech Mediów}{12}{subsection.4.10}%
+\contentsline {subsection}{\numberline {4.11}Graf Petersena — król kontrprzykładów}{14}{subsection.4.11}%
+\contentsline {subsection}{\numberline {4.12}Grafy bezskalowe i sieci rzeczywiste}{15}{subsection.4.12}%
+\contentsline {subsection}{\numberline {4.13}Graf uporządkowanej widoczności $O_n$}{15}{subsection.4.13}%
+\contentsline {section}{\numberline {5}Dowody matematyczne}{17}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Graf pełny $K_n$: $\mathrm {rounds}(K_n,w) = \min (k, n-1)$}{17}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Cykl $C_n$ dla $n \ge 4$: niezmiennik zakleszczenia}{19}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Graf gwiazdowy $S_n$: jedyna rozwiązywalna konfiguracja}{19}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}Graf ścieżkowy $P_n$ dla $n \ge 4$: zawsze zakleszczenie}{20}{subsection.5.4}%
+\contentsline {subsection}{\numberline {5.5}Hiperkostka $Q_k$ dla $k \ge 2$: zawsze zakleszczenie}{21}{subsection.5.5}%
+\contentsline {subsection}{\numberline {5.6}$C_4$ z cięciwą $(0,2)$: łamanie symetrii}{21}{subsection.5.6}%
+\contentsline {subsection}{\numberline {5.7}$K_n \setminus e$: sukces iff obaj brakujący wierzchołki białe}{22}{subsection.5.7}%
+\contentsline {section}{\numberline {6}Analiza entropii epistemicznej}{22}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Definicja i interpretacja}{22}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Obserwacje eksperymentalne}{23}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}Wnioski z analizy entropii}{23}{subsection.6.3}%
+\contentsline {section}{\numberline {7}Dyskusja}{24}{section.7}%
+\contentsline {subsection}{\numberline {7.1}Warunek konieczny i wystarczający rozwiązywalności}{24}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}Porównanie wariantów gry}{24}{subsection.7.2}%
+\contentsline {section}{\numberline {8}Wnioski}{24}{section.8}%
+\contentsline {section}{Literatura}{26}{section*.23}%
