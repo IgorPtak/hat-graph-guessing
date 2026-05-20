@@ -2,41 +2,40 @@
 <html lang="pl">
 <head>
     <meta charset="utf-8">
-    <title>Problem Kapeluszy - Prezentacja</title>
+    <title>Gra w Kapelusze na Grafach - Prezentacja</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reset.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.min.css">
-    
+
     <style>
-        /* Niestandardowa szata graficzna dopasowana do Twojego screenshota */
         .reveal ul, .reveal ol {
-            display: block;      /* Wymusza, by lista zajmowała pełną szerokość slajdu */
-            text-align: left;    /* Wyrównuje tekst podpunktów do lewej krawędzi */
-            margin-left: 10%;    /* Bezpieczny margines, aby tekst nie dotykał samej krawędzi ekranu */
+            display: block;
+            text-align: left;
+            margin-left: 10%;
         }
         .reveal h4 {
-            margin-bottom: 20px; /* Zwiększa odstęp pomiędzy nagłówkiem a obrazkiem */
+            margin-bottom: 12px;
         }
         .reveal {
-            background-color: #FDFFF2; /* Jasnożółte tło */
-            color: #2B2B2B;            /* Ciemnoszary tekst */
+            background-color: #FDFFF2;
+            color: #2B2B2B;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         .reveal h1, .reveal h2, .reveal h3 {
-            color: #3B5998;            /* Granat węzłów */
+            color: #3B5998;
             text-transform: none;
             font-weight: bold;
         }
         .reveal ul {
             list-style-type: square;
-            color: #D9534F;            /* Czerwień węzłów dla punktorów */
+            color: #D9534F;
         }
         .reveal ul li {
             margin-bottom: 0.5em;
         }
         .reveal ul li span {
-            color: #2B2B2B;            /* Powrót do koloru tekstu wewnątrz listy */
+            color: #2B2B2B;
         }
         .reveal table {
             font-size: 0.8em;
@@ -46,24 +45,54 @@
         .reveal th {
             color: #3B5998;
             border-bottom: 2px solid #3B5998;
-            padding: 10px;
+            padding: 8px;
             text-align: left;
         }
         .reveal td {
             border-bottom: 1px solid #B0B0B0;
-            padding: 10px;
+            padding: 8px;
         }
         .highlight-red { color: #D9534F; font-weight: bold; }
         .highlight-blue { color: #3B5998; font-weight: bold; }
-        
-        /* Layout dla dwóch kolumn */
+        .highlight-green { color: #2E7D32; font-weight: bold; }
+
         .col-container {
             display: flex;
             justify-content: space-between;
+            align-items: flex-start;
         }
         .col {
             flex: 1;
-            margin: 0 10px;
+            margin: 0 8px;
+        }
+
+        .result-box {
+            border-radius: 8px;
+            padding: 10px 16px;
+            margin: 6px 0;
+            text-align: center;
+            font-size: 0.82em;
+        }
+        .success-box {
+            background: #E8F5E9;
+            border: 1px solid #4CAF50;
+        }
+        .deadlock-box {
+            background: #FFEBEE;
+            border: 1px solid #D9534F;
+        }
+        .theorem-box {
+            background: #EEF2FF;
+            border-left: 4px solid #3B5998;
+            padding: 10px 14px;
+            margin: 12px 0;
+            font-size: 0.85em;
+            text-align: left;
+        }
+        .small-note {
+            font-size: 0.72em;
+            color: #555;
+            text-align: left;
         }
     </style>
 </head>
@@ -71,118 +100,264 @@
     <div class="reveal">
         <div class="slides">
 
+            <!-- ══════════════════════════════════════════════════ -->
+            <!-- 1. TYTUŁ -->
+            <!-- ══════════════════════════════════════════════════ -->
             <section>
-                <h1>Problem Kapeluszy</h1>
-                <h3>Dynamiczna Logika Epistemiczna</h3>
-                <p>Ewolucja wiedzy w systemach wieloagentowych</p>
+                <h1>Gra w Kapelusze na Grafach</h1>
+                <h3>Analiza Epistemiczna, Implementacja i Dowody</h3>
+                <p style="margin-top: 30px;">Kacper Piotrowski &amp; Igor Ptak</p>
+                <p style="color: #7A7A7A; font-size: 0.75em; margin-top: 8px;">Gry Kombinatoryczne · MINI · 2026</p>
             </section>
 
+            <!-- ══════════════════════════════════════════════════ -->
+            <!-- 2. INTUICJA -->
+            <!-- ══════════════════════════════════════════════════ -->
             <section>
-                <h2>Architektura Stanów</h2>
+                <h2>Intuicja: Zagadka Kapeluszy</h2>
                 <ul>
-                    <li><span><strong>Przestrzeń Możliwych Światów ($\Omega$):</strong> Globalny stan systemu to wektor binarny $\omega \in \{0, 1\}^N$.</span></li>
-                    <li><span><strong>Relacja Nierozróżnialności ($R_i$):</strong> Zdefiniowana przez topologię grafu. Agenci nie widzą swoich węzłów.
-                        $$(\omega, \omega') \in R_i \iff \forall j \in N(i), \omega_j = \omega'_j$$
+                    <li><span><strong>$N$ agentów</strong> stoi w wierzchołkach grafu. Każdy nosi kapelusz — <span class="highlight-red">czerwony</span> lub biały.</span></li>
+                    <li><span>Agent widzi kapelusze <strong>wyłącznie swoich sąsiadów</strong> w grafie — nie widzi własnego.</span></li>
+                    <li><span>Wspólna wiedza: <em>co najmniej jeden kapelusz jest czerwony</em> (świat $w = 0$ wykluczony).</span></li>
+                    <li><span>Cel: <strong>wszyscy</strong> agenci muszą bezbłędnie odgadnąć własny kolor.</span></li>
+                    <li><span>Mechanizm: iteracyjne <strong>rundy milczenia i publicznych oznajmień</strong> — wiedza rośnie zgodnie z DEL.</span></li>
+                </ul>
+                <div class="theorem-box" style="margin-top: 20px; text-align: center;">
+                    Kluczowe pytanie: <strong>jakie topologie grafu dopuszczają sukces?</strong>
+                </div>
+            </section>
+
+            <!-- ══════════════════════════════════════════════════ -->
+            <!-- 3. FORMALIZACJA -->
+            <!-- ══════════════════════════════════════════════════ -->
+            <section>
+                <h2>Formalizacja: Model Kripkego</h2>
+                <ul>
+                    <li><span><strong>Świat</strong> $w \in \{1,\ldots,2^n{-}1\}$: maska bitowa stanu kapeluszy wszystkich agentów.</span></li>
+                    <li><span><strong>Obserwacja agenta $i$:</strong>
+                        $$\mathrm{view}_i(w) = w \;\&\; \mathrm{mask}_i, \qquad \mathrm{mask}_i = \bigoplus_{j \in N(i)} 2^j$$
                     </span></li>
-                    <li><span><strong>Stan Epistemiczny:</strong> Zbiór światów, które agent $i$ uważa za możliwe:
-                        $$\mathcal{K}_i(\omega) = \{ \omega' \in \Omega \mid (\omega, \omega') \in R_i \}$$
+                    <li><span><strong>Klasa równoważności</strong> — światy nierozróżnialne dla agenta $i$:
+                        $$[i,v] = \{w \in \Omega : \mathrm{view}_i(w) = v\}$$
+                    </span></li>
+                    <li><span>Agent <em>może odgadnąć</em> swój kolor wtedy i tylko wtedy, gdy klasa $[i,v] \cap \Omega_\mathrm{valid}$ jest <strong>jednorodna</strong> (jeden kolor bitu $i$).</span></li>
+                </ul>
+                <p class="small-note" style="margin-top: 10px;">Relacja $\sim_i$ jest relacją równoważności → system logiki epistemicznej <strong>S5</strong> (T, 4, 5).</p>
+            </section>
+
+            <!-- ══════════════════════════════════════════════════ -->
+            <!-- 4. PROTOKÓŁ DEL -->
+            <!-- ══════════════════════════════════════════════════ -->
+            <section>
+                <h2>Protokół Publicznych Oznajmień (DEL)</h2>
+                <ul>
+                    <li><span><strong>Runda odgadywania:</strong> agent z jednorodną klasą deklaruje swój kolor publicznie. Eliminuje niespójne światy.</span></li>
+                    <li><span><strong>Runda ciszy ($\sigma_t$):</strong> nikt nie może odgadnąć. Samo milczenie jest informacją:
+                        $$\Omega_{t+1} = \{ \omega \in \Omega_t \mid \Omega_t,\, \omega \models \sigma_t \}$$
+                        Eliminuje światy, w których <em>ktoś mógłby</em> mówić.
                     </span></li>
                 </ul>
-            </section>
-
-            <section>
-                <h2>Dynamika Wiedzy</h2>
-                <p style="text-align: left; font-size: 0.8em;">Ewolucja zachodzi poprzez logikę ogłoszeń publicznych (PAL).</p>
-                <ul>
-                    <li><span><strong>Inicjalizacja ($\phi_0$):</strong> "Istnieje co najmniej jedna czerwona czapka". Usuwa wektor $\mathbf{0}$. Wymaga, by w rzeczywistości $\omega^* \neq \mathbf{0}$.</span></li>
-                    <li><span><strong>Operator Milczenia ($\sigma_t$):</strong>
-                        $$\sigma_t = \bigwedge_{j \in V} \neg (K_j p_j \lor K_j \neg p_j)$$
-                    </span></li>
-                    <li><span><strong>Rekurencyjna Redukcja:</strong>
-                        $$\Omega_{t+1} = \{ \omega \in \Omega_t \mid \Omega_t, \omega \models \sigma_t \}$$
-                    </span></li>
-                </ul>
-            </section>
-
-            <section>
-                <h2>Analiza Topologii</h2>
-                <ul>
-                    <li><span class="highlight-red">Graf Pełny ($K_N$):</span> <span>Wiedza budowana w czasie. Przy $k$ czerwonych czapkach, agenci zgadują w rundzie $T=k-1$.</span></li>
-                    <li><span class="highlight-red">Cykl ($C_N$):</span> <span>Horyzont Epistemiczny. Prędkość propagacji zależy od odległości geodezyjnej $d(i, j)$.</span></li>
-                    <li><span class="highlight-red">Gwiazda ($S_N$):</span> <span>Deadlock i pasożytnictwo informacyjne. Jeśli centrum ma $0$, a dwa liście $1$, weryfikacja staje w rundzie $t=1$.</span></li>
-                </ul>
-            </section>
-
-            <section>
-                <h2>Wyzwania Obliczeniowe</h2>
-                <ul>
-                    <li><span>Weryfikacja wiedzy jest problemem <strong>PSPACE-complete</strong> (zagnieżdżone kwantyfikatory, przestrzeń $2^N$).</span></li>
-                    <li><span><strong>Wektoryzacja SIMD:</strong> Instrukcje AVX2 / AVX-512 pozwalają przetwarzać 256 bitów w jednym cyklu zegara.</span></li>
-                    <li><span>Złożoność operacji na zbiorach spada z $\mathcal{O}(2^N)$ do $\mathcal{O}(2^N / 256)$. Bez tego systemy HFT dławiłyby się przy $N > 10$.</span></li>
-                </ul>
-            </section>
-
-            <section>
-                <h2>Topologia: Graf Pełny</h2>
-                <img src="hats_del_complete_n5.gif" alt="Symulacja grafu pełnego" style="max-height: 60vh; border: 2px solid #3B5998; border-radius: 8px;">
-            </section>
-
-            <section>
-                <h2>Porównanie: Cykl vs Gwiazda</h2>
-                <div class="col-container">
-                    <div class="col">
-                        <h4>Cykl</h4>
-                        <img src="hats_del_cycle_n4.gif" alt="Symulacja cyklu" style="max-width: 100%; border: 1px solid #B0B0B0;">
+                <div class="col-container" style="margin-top: 22px;">
+                    <div class="col result-box success-box">
+                        <span class="highlight-green">✓ Sukces</span><br>
+                        Wszyscy odgadują w skończonej liczbie rund
                     </div>
-                    <div class="col">
-                        <h4>Gwiazda</h4>
-                        <img src="hats_del_star_n4.gif" alt="Symulacja gwiazdy" style="max-width: 100%; border: 1px solid #B0B0B0;">
+                    <div class="col result-box deadlock-box">
+                        <span class="highlight-red">✗ Zakleszczenie</span><br>
+                        Punkt stały — cisza nie eliminuje żadnego świata
                     </div>
                 </div>
             </section>
 
+            <!-- ══════════════════════════════════════════════════ -->
+            <!-- 5. GRAF PEŁNY K_n -->
+            <!-- ══════════════════════════════════════════════════ -->
             <section>
-                <h2>Topologie Asymetryczne</h2>
+                <h2>Graf Pełny $K_n$ — Zawsze Sukces</h2>
                 <div class="col-container">
                     <div class="col">
-                        <h4>Latawiec</h4>
-                        <img src="hats_del_kite_n4.gif" alt="Symulacja latawca" style="max-width: 100%; border: 1px solid #B0B0B0;">
+                        <ul>
+                            <li><span>Każdy agent widzi <strong>wszystkich $n-1$ pozostałych</strong>: deg$(i) = n-1$.</span></li>
+                            <li><span>Klasy 2-elementowe — jeden wolny bit (własny).</span></li>
+                            <li><span>Rundy ciszy <em>odliczają</em> kolejne warstwy popcount:
+                                $$\Omega_j = \{w : \mathrm{popcount}(w) > j\}$$
+                            </span></li>
+                            <li><span>Formuła:
+                                $$\mathrm{rounds}(K_n, w) = \min(k,\, n{-}1)$$
+                                gdzie $k = \mathrm{popcount}(w)$.
+                            </span></li>
+                        </ul>
+                        <p class="small-note">Analog Zagadki Zabrudzonych Dzieci (Fagin et al., 1995). Jedyna topologia z 100% sukcesem.</p>
                     </div>
-                    <div class="col">
-                        <h4>Domek</h4>
-                        <img src="hats_del_house_n5.gif" alt="Symulacja domku" style="max-width: 100%; border: 1px solid #B0B0B0;">
+                    <div class="col" style="text-align: center;">
+                        <img src="hats_del_complete_n5.gif" alt="Graf pełny K5" style="max-height: 48vh; border: 2px solid #3B5998; border-radius: 8px;">
                     </div>
                 </div>
             </section>
 
+            <!-- ══════════════════════════════════════════════════ -->
+            <!-- 6. ZAKLESZCZENIE: CYKL I ŚCIEŻKA -->
+            <!-- ══════════════════════════════════════════════════ -->
             <section>
-                <h2>Topologie Asymetryczne</h2>
+                <h2>Zakleszczenie: Cykl $C_n$ i Ścieżka $P_n$</h2>
+                <div class="theorem-box">
+                    Dla $n \ge 4$: <strong>każdy</strong> świat $w \ge 1$ prowadzi do zakleszczenia.
+                </div>
+                <div class="col-container" style="margin-top: 10px;">
+                    <div class="col" style="text-align: center;">
+                        <h4>Cykl $C_4$</h4>
+                        <img src="hats_del_cycle_n4.gif" alt="Cykl C4" style="max-width: 100%; border: 1px solid #B0B0B0; border-radius: 4px;">
+                    </div>
+                    <div class="col" style="text-align: center;">
+                        <h4>Ścieżka $P_4$</h4>
+                        <img src="hats_del_path_n4.gif" alt="Ścieżka P4" style="max-width: 100%; border: 1px solid #B0B0B0; border-radius: 4px;">
+                    </div>
+                </div>
+                <p class="small-note" style="margin-top: 10px;"><strong>Dlaczego?</strong> Każdy agent widzi ≤ 2 sąsiadów, ma ≥ 2 wolne bity (własny + bity poza sąsiedztwem). Klasy zawsze niejednorodne → punkt stały operatora ciszy. Wyjątek: $C_3 = K_3$.</p>
+            </section>
+
+            <!-- ══════════════════════════════════════════════════ -->
+            <!-- 7. ASYMETRIA RÓL: GWIAZDA I KOŁO -->
+            <!-- ══════════════════════════════════════════════════ -->
+            <section>
+                <h2>Asymetria Ról: Gwiazda $S_n$ i Koło $W_n$</h2>
+                <div class="col-container">
+                    <div class="col" style="text-align: center;">
+                        <h4>Gwiazda $S_n$ <span style="font-size:0.7em; color:#7A7A7A;">(centrum: deg $= n-1$)</span></h4>
+                        <img src="hats_del_star_n4.gif" alt="Gwiazda S4" style="max-height: 32vh; border: 1px solid #B0B0B0; border-radius: 4px;">
+                        <p class="small-note">Sukces <strong>tylko</strong> gdy $w=1$: centrum widzi same białe liście → klasa = singleton → odgaduje natychmiast.</p>
+                    </div>
+                    <div class="col" style="text-align: center;">
+                        <h4>Koło $W_5$ <span style="font-size:0.7em; color:#7A7A7A;">(centrum + cykl liści)</span></h4>
+                        <img src="hats_del_wheel_n5.gif" alt="Koło W5" style="max-height: 32vh; border: 1px solid #B0B0B0; border-radius: 4px;">
+                        <p class="small-note">Sukces <strong>tylko</strong> gdy $w = 2^{n-1}$ (samo centrum czerwone). Liście tworzą cykl $C_{n-1}$ — epistemicznie zablokowany.</p>
+                    </div>
+                </div>
+                <p class="small-note" style="text-align:center; margin-top: 8px;">„Pasożytnictwo informacyjne": liście czekają na centrum, centrum czeka na pełną informację.</p>
+            </section>
+
+            <!-- ══════════════════════════════════════════════════ -->
+            <!-- 8. CZĘŚCIOWY SUKCES: K_n\e i O_n -->
+            <!-- ══════════════════════════════════════════════════ -->
+            <section>
+                <h2>Częściowy Sukces: $K_n \setminus e$ i Graf $O_n$</h2>
                 <div class="col-container">
                     <div class="col">
-                        <h4>Ścieżka</h4>
-                        <img src="hats_del_path_n4.gif" alt="Symulacja ścieżki" style="max-width: 100%; border: 1px solid #B0B0B0;">
+                        <h4>$K_5 \setminus \{3,4\}$ <span style="font-size:0.7em; color:#7A7A7A;">(usunięta krawędź)</span></h4>
+                        <img src="fig_graph_k5e.png" alt="K5 minus krawędź" style="max-width: 88%; border: 1px solid #B0B0B0; border-radius: 4px; display: block; margin: 6px auto;">
+                        <p class="small-note">Sukces wtw. obaj „brakujący" wierzchołki <strong>mają białe kapelusze</strong>. Asymptotycznie ≈ <strong>25%</strong> światów. Przykład: 3 z 31 dla $K_5$.</p>
                     </div>
                     <div class="col">
-                        <h4>Koło</h4>
-                        <img src="hats_del_wheel_n5.gif" alt="Symulacja koła" style="max-width: 100%; border: 1px solid #B0B0B0;">
+                        <h4>Graf Uporządkowany $O_n$ <span style="font-size:0.7em; color:#7A7A7A;">(hierarchia widoczności)</span></h4>
+                        <p class="small-note">Wierzchołek $k$ widzi $\{k{+}1,\ldots,n{-}1\}$ — im wyższy indeks, tym mniejszy widok. Wierzchołek $n-1$ nie widzi nikogo.</p>
+                        <div class="col-container" style="margin-top: 8px;">
+                            <div class="col" style="text-align: center; font-size: 0.7em;">
+                                <img src="fig_entropy_o5_succ.png" alt="O5 sukces" style="max-width: 100%; border: 1px solid #B0B0B0;">
+                                <em>Sukces ($w=1$)</em>
+                            </div>
+                            <div class="col" style="text-align: center; font-size: 0.7em;">
+                                <img src="fig_entropy_o5_dead.png" alt="O5 zakleszczenie" style="max-width: 100%; border: 1px solid #B0B0B0;">
+                                <em>Zakleszczenie ($w=3$)</em>
+                            </div>
+                        </div>
+                        <p class="small-note">Sukces <strong>tylko</strong> gdy $w=1$: wyłącznie wierzchołek 0 (najwyższa ranga) czerwony. Analog klasycznej zagadki Berlekampa (1964).</p>
                     </div>
                 </div>
             </section>
 
+            <!-- ══════════════════════════════════════════════════ -->
+            <!-- 9. GRAFY BIPARTITE + GRAF PETERSENA -->
+            <!-- ══════════════════════════════════════════════════ -->
             <section>
-                <h2>Wnioski końcowe</h2>
-                <p style="color: #3B5998; font-weight: bold; font-size: 1.3em; margin-bottom: 30px;">
+                <h2>Grafy Dwudzielne $K_{m,n}$ i Graf Petersena</h2>
+                <div class="col-container">
+                    <div class="col">
+                        <h4>$K_{3,3}$ — Zagadka Trzech Mediów</h4>
+                        <img src="fig_entropy_k33_dead.png" alt="K33 entropia" style="max-width: 100%; border: 1px solid #B0B0B0; border-radius: 4px;">
+                        <p class="small-note">Każdy wierzchołek widzi wyłącznie drugą partycję: ≥ 2 wolne bity (własny + współpartycja) → <span class="highlight-red">zawsze zakleszczenie</span> dla $m,n \ge 2$.</p>
+                        <p class="small-note">Związek z tw. <strong>Kuratowskiego</strong>: $K_{3,3}$ jest nieplanarny i epistemicznie zablokowany.</p>
+                    </div>
+                    <div class="col">
+                        <h4>Graf Petersena <span style="font-size:0.7em; color:#7A7A7A;">(3-regularny, 10 wierzchołków)</span></h4>
+                        <img src="fig_entropy_petersen_dead.png" alt="Petersen entropia" style="max-width: 100%; border: 1px solid #B0B0B0; border-radius: 4px;">
+                        <p class="small-note">6 wolnych bitów na agenta → $2^6 = 64$ światy w każdej klasie. Wyczerpująca analiza: <span class="highlight-red">0 / 1023</span> sukcesów.</p>
+                        <p class="small-note">„Król kontrprzykładów" teorii grafów jest też epistemicznie niemożliwy.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ══════════════════════════════════════════════════ -->
+            <!-- 10. ENTROPIA EPISTEMICZNA -->
+            <!-- ══════════════════════════════════════════════════ -->
+            <section>
+                <h2>Entropia Epistemiczna</h2>
+                <p style="text-align: left; font-size: 0.85em;">Miara niepewności agenta $i$ w rundzie $t$:</p>
+                <p style="text-align: center;">
+                    $$H_i(t) = \log_2 \bigl|[i,\, \mathrm{view}_i(w)] \cap \Omega_\mathrm{valid}(t)\bigr|$$
+                </p>
+                <div class="col-container" style="margin-top: 8px;">
+                    <div class="col" style="text-align: center;">
+                        <p style="font-size: 0.8em;"><span class="highlight-green">Sukces</span>: $H_i$ spada do 0 kaskadowo</p>
+                        <img src="fig_entropy_k5e_k3.png" alt="Entropia sukces K5e" style="max-width: 100%; border: 1px solid #B0B0B0; border-radius: 4px;">
+                        <p class="small-note">$K_5 \setminus e$, $k=3$ — trzej czerwoni agenci (0,1,2) odgadują kaskadowo. Entropia węzłów 3,4 spada po ich odgadnięciu.</p>
+                    </div>
+                    <div class="col" style="text-align: center;">
+                        <p style="font-size: 0.8em;"><span class="highlight-red">Zakleszczenie</span>: $H_i$ = const</p>
+                        <img src="fig_entropy_k5e_dead.png" alt="Entropia zakleszczenie K5e" style="max-width: 100%; border: 1px solid #B0B0B0; border-radius: 4px;">
+                        <p class="small-note">$K_5 \setminus e$, węzeł 3 czerwony — punkt stały. Entropia „zamrożona".</p>
+                    </div>
+                </div>
+                <p class="small-note" style="text-align: center; margin-top: 6px;">
+                    <strong>Sukces</strong> $\iff$ $\exists\, i, t:\, H_i(t) = 0$ (inicjuje kaskadę) &nbsp;·&nbsp; <strong>Zakleszczenie</strong> $\iff$ $H_i(t) = \mathrm{const}$ dla wszystkich $i, t$
+                </p>
+            </section>
+
+            <!-- ══════════════════════════════════════════════════ -->
+            <!-- 11. KRYTERIUM GĘSTOŚCI + PORÓWNANIE -->
+            <!-- ══════════════════════════════════════════════════ -->
+            <section>
+                <h2>Kryterium Gęstości i Porównanie</h2>
+                <div class="col-container">
+                    <div class="col" style="text-align: center;">
+                        <img src="fig_success_rates.png" alt="Odsetek sukcesów" style="max-height: 52vh; border: 1px solid #B0B0B0; border-radius: 4px;">
+                    </div>
+                    <div class="col">
+                        <div class="theorem-box">
+                            <strong>Kryterium konieczne sukcesu:</strong><br>
+                            Musi istnieć agent $i$ z $\deg(i) = n-1$<br>
+                            <em>lub</em> kaskadowa struktura eliminacji.
+                        </div>
+                        <table style="margin-top: 12px; font-size: 0.78em;">
+                            <tr><th>Topologia</th><th>Sukces</th></tr>
+                            <tr><td>$K_n$</td><td><span class="highlight-green">100%</span></td></tr>
+                            <tr><td>$K_n \setminus e$</td><td>≈ 25%</td></tr>
+                            <tr><td>$S_n$, $W_n$, $O_n$</td><td>&lt; 5%</td></tr>
+                            <tr><td>$C_n$ ($n \ge 4$), $Q_k$, $K_{m,n}$, Petersen</td><td><span class="highlight-red">0%</span></td></tr>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ══════════════════════════════════════════════════ -->
+            <!-- 12. WNIOSKI KOŃCOWE -->
+            <!-- ══════════════════════════════════════════════════ -->
+            <section>
+                <h2>Wnioski Końcowe</h2>
+                <p style="color: #3B5998; font-weight: bold; font-size: 1.25em; margin-bottom: 24px; text-align: center;">
                     Topologia to epistemologia.
                 </p>
                 <ul>
                     <li>
-                        <span><strong>Gęstość:</strong> W grafach gęstych (np. pełny) wiedza buduje się sekwencyjnie poprzez zliczanie kolejnych rund.</span>
+                        <span><strong>Gęstość gwarantuje sukces:</strong> tylko $K_n$ osiąga 100% — formuła $\min(k,n-1)$ opisuje kaskadowe budowanie wiedzy przez rundy ciszy.</span>
                     </li>
                     <li>
-                        <span><strong>Geometria:</strong> W grafach rzadkich (np. cykl) czas propagacji milczenia jest zdominowany przez dystans fizyczny między agentami.</span>
+                        <span><strong>Symetria = paraliż:</strong> grafy regularne i symetryczne ($C_n$, $Q_k$, Petersen, $K_{m,n}$) zawsze kleszczą — żadna klasa równoważności nigdy nie jest jednorodna.</span>
                     </li>
                     <li>
-                        <span><strong>Asymetria ról:</strong> W grafach o nieregularnej strukturze (np. gwiazda) występuje zjawisko pasożytnictwa informacyjnego. Centrum buduje wiedzę, doprowadzając liście do trwałej pułapki informacyjnej.</span>
+                        <span><strong>Asymetria ról:</strong> wyłom tworzą agenci z deg$(i) = n-1$ ($S_n$, $W_n$) — ale sukces możliwy tylko w jednej konfiguracji.</span>
+                    </li>
+                    <li>
+                        <span><strong>Entropia epistemiczna</strong> $H_i(t) = \log_2|{[i,v] \cap \Omega}|$ trafnie wizualizuje kaskadę wiedzy (sukces) i punkty stałe (zakleszczenie).</span>
                     </li>
                 </ul>
             </section>
@@ -199,7 +374,7 @@
             center: true,
             hash: true,
             transition: 'slide',
-            plugins: [ RevealMath.MathJax3 ] // Aktywacja renderowania matematyki
+            plugins: [ RevealMath.MathJax3 ]
         });
     </script>
 </body>
