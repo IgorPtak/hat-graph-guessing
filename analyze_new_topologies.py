@@ -232,3 +232,45 @@ for wn, (s, t) in wheel_results.items():
     print(f"  W_{wn}: {s}/{t} ({100*s/t:.2f}%)")
 
 print("\nPetersen: 0/1023 (0%)")
+
+# ── O5 (octahedron, n=6) entropy plots ───────────────────────────────────────
+print("=== O5 octahedron entropy plots ===")
+
+def make_octahedron():
+    # Octahedron: K_{2,2,2} — 3 pairs of opposite vertices, all cross-pair edges
+    g = hp.Graph(6)
+    for u in range(6):
+        for v in range(u + 1, 6):
+            if not (u // 2 == v // 2):  # skip opposite pairs (0,1),(2,3),(4,5)
+                g.add_edge(u, v)
+    return g
+
+def make_ordered(n):
+    # O_n: vertex k sees {k+1, ..., n-1} (directed visibility as undirected edges)
+    g = hp.Graph(n)
+    for u in range(n):
+        for v in range(u + 1, n):
+            g.add_edge(u, v)
+    return g
+
+g_o5 = make_ordered(5)
+plot_entropy(g_o5, 1, r'Graf uporządkowany $O_5$ — sukces ($w=1$)', 'fig_entropy_o5_succ.png')
+plot_entropy(g_o5, 3, r'Graf uporządkowany $O_5$ — zakleszczenie ($w=3$)', 'fig_entropy_o5_dead.png')
+
+# ── K5\e entropy plots (success and deadlock) ─────────────────────────────────
+print("=== K5\\e entropy plots ===")
+
+g_k5e = make_kne(5, 3, 4)
+succ_k5e, dead_k5e = [], []
+for w in range(1, 32):
+    r = hp.Solver(g_k5e, w).run()
+    if r.success:
+        succ_k5e.append(w)
+    else:
+        dead_k5e.append(w)
+print(f"  K5\\e: {len(succ_k5e)}/31 successes, first_succ={succ_k5e[0] if succ_k5e else None}, first_dead={dead_k5e[0] if dead_k5e else None}")
+
+if succ_k5e:
+    plot_entropy(g_k5e, succ_k5e[0], r'$K_5\!\setminus\!e$ — sukces ($w=' + f'{succ_k5e[0]}' + r'$)', 'fig_entropy_k5e_k3.png')
+if dead_k5e:
+    plot_entropy(g_k5e, dead_k5e[0], r'$K_5\!\setminus\!e$ — zakleszczenie ($w=' + f'{dead_k5e[0]}' + r'$)', 'fig_entropy_k5e_dead.png')
